@@ -18,11 +18,11 @@
     .content.active { display:block; }
     .db-item { display:flex; align-items:center; gap:12px; padding:14px; background:var(--l); border-radius:12px; margin:8px 0; cursor:pointer; font-size:15px; }
     .db-item svg { width:28px; height:28px; fill:#5f6368; }
-    .add-row { display:flex; gap:6px; margin:12px 0; align-items:center; flex-wrap:wrap; }
+    .add-row { display:flex; gap:6px; margin:12px 0; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
     .add-row input, .add-row select { padding:8px; border:1px solid #dadce0; border-radius:8px; font-size:13px; }
-    .add-row input[type="text"] { flex:1; min-width:80px; }
+    .add-row input[type="text"] { flex:1; min-width:70px; }
     .add-row input[type="number"] { width:70px; }
-    .add-row .btn-add { background:var(--g); color:white; width:36px; height:36px; border-radius:50%; font-weight:bold; font-size:16px; }
+    .add-row .btn-add { background:var(--g); color:white; width:36px; height:36px; border-radius:50%; font-weight:bold; font-size:16px; flex-shrink:0; }
     .table { width:100%; border-collapse:collapse; font-size:13px; margin:10px 0; }
     .table th, .table td { border:1px solid #ddd; padding:6px 4px; text-align:center; }
     .table th { background:var(--o); color:white; font-size:12px; }
@@ -34,10 +34,11 @@
     .total { font-weight:bold; text-align:right; padding:10px; background:#e8f0fe; border-radius:8px; margin:12px 0; font-size:15px; }
     .nav-bottom { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid #ddd; display:flex; padding:6px; box-shadow:0 -2px 8px rgba(0,0,0,0.1); z-index:100; }
     .nav-btn { flex:1; text-align:center; padding:10px; color:#5f6368; font-size:11px; cursor:pointer; }
-    .nav-btn.active { color:var(--o); font-weight:bold; }
-    .select-prod { display:flex; gap:6px; margin:12px 0; padding:8px; background:#f0f0f0; border-radius:8px; }
-    .select-prod select { flex:1; }
+    .nav-btn .active { color:var(--o); font-weight:bold; }
+    .select-prod { display:flex; gap:6px; margin:12px 0; padding:8px; background:#f0f0f0; border-radius:8px; align-items:center; }
+    .select-prod select { flex:2; }
     .select-prod input { width:60px; }
+    .select-prod .stock-info { font-size:12px; color:#5f6368; white-space:nowrap; }
     .select-prod .btn-add { width:36px; height:36px; }
     .form-input { width:100%; padding:10px; margin:6px 0; border:1px solid #ddd; border-radius:8px; }
     .settings { padding:16px; }
@@ -92,13 +93,13 @@
     <h3>Mano de Obra</h3>
     <div class="add-row">
       <input type="text" id="manoStock" placeholder="N/A" style="width:60px;" />
-      <input type="text" id="manoDesc" placeholder="Puesto" />
-      <input type="number" step="0.01" id="manoLista" placeholder="Lista" />
-      <input type="number" step="0.01" id="manoPublico" placeholder="Público" />
+      <input type="text" id="manoDesc" placeholder="Puesto" style="flex:2;" />
+      <input type="number" step="0.01" id="manoLista" placeholder="$PL" style="width:70px;" />
+      <input type="number" step="0.01" id="manoPublico" placeholder="$PP" style="width:70px;" />
       <button class="btn-add" onclick="addItem('mano')">+</button>
     </div>
     <table class="table">
-      <thead><tr><th>Stock</th><th>Puesto</th><th>Lista</th><th>Público</th><th></th></tr></thead>
+      <thead><tr><th>Stock</th><th>Puesto</th><th>$PL</th><th>$PP</th><th></th></tr></thead>
       <tbody id="manoList"></tbody>
     </table>
     <button class="btn btn-o" onclick="saveBase('mano')">Guardar</button>
@@ -109,13 +110,13 @@
     <h3>Equipos</h3>
     <div class="add-row">
       <input type="text" id="equipoStock" placeholder="N/A" style="width:60px;" />
-      <input type="text" id="equipoDesc" placeholder="Descripción" />
-      <input type="number" step="0.01" id="equipoLista" placeholder="Lista" />
-      <input type="number" step="0.01" id="equipoPublico" placeholder="Público" />
+      <input type="text" id="equipoDesc" placeholder="Descripción" style="flex:2;" />
+      <input type="number" step="0.01" id="equipoLista" placeholder="$PL" style="width:70px;" />
+      <input type="number" step="0.01" id="equipoPublico" placeholder="$PP" style="width:70px;" />
       <button class="btn-add" onclick="addItem('equipos')">+</button>
     </div>
     <table class="table">
-      <thead><tr><th>Stock</th><th>Descripción</th><th>Lista</th><th>Público</th><th></th></tr></thead>
+      <thead><tr><th>Stock</th><th>Descripción</th><th>$PL</th><th>$PP</th><th></th></tr></thead>
       <tbody id="equiposList"></tbody>
     </table>
     <button class="btn btn-o" onclick="saveBase('equipos')">Guardar</button>
@@ -126,14 +127,14 @@
     <h3>Materiales</h3>
     <div class="add-row">
       <input type="text" id="matStock" placeholder="Stock" style="width:60px;" />
-      <input type="text" id="matMarca" placeholder="Marca" />
-      <input type="text" id="matDesc" placeholder="Descripción" />
-      <input type="number" step="0.01" id="matLista" placeholder="Lista" />
-      <input type="number" step="0.01" id="matPublico" placeholder="Público" />
+      <input type="text" id="matMarca" placeholder="Marca" style="flex:1;" />
+      <input type="text" id="matDesc" placeholder="Descripción" style="flex:2;" />
+      <input type="number" step="0.01" id="matLista" placeholder="$PL" style="width:70px;" />
+      <input type="number" step="0.01" id="matPublico" placeholder="$PP" style="width:70px;" />
       <button class="btn-add" onclick="addItem('materiales')">+</button>
     </div>
     <table class="table">
-      <thead><tr><th>Stock</th><th>Marca</th><th>Descripción</th><th>Lista</th><th>Público</th><th></th></tr></thead>
+      <thead><tr><th>Stock</th><th>Marca</th><th>Descripción</th><th>$PL</th><th>$PP</th><th></th></tr></thead>
       <tbody id="materialesList"></tbody>
     </table>
     <button class="btn btn-o" onclick="saveBase('materiales')">Guardar</button>
@@ -154,13 +155,14 @@
     <textarea id="observaciones" placeholder="Observaciones" rows="2" class="form-input"></textarea>
 
     <div class="select-prod">
-      <select id="selectProducto"><option>Seleccione...</option></select>
-      <input type="number" id="cantAdd" placeholder="Cant" />
+      <select id="selectProducto" onchange="updateStockInfo()"><option>Seleccione...</option></select>
+      <input type="number" id="cantAdd" placeholder="Cant" min="1" />
+      <div class="stock-info" id="stockInfo">Stock: -</div>
       <button class="btn-add" onclick="addToCotizFromSelect()">+</button>
     </div>
 
     <table class="table">
-      <thead><tr><th>Cant</th><th>Producto</th><th>P.Púb</th><th>Total</th><th></th></tr></thead>
+      <thead><tr><th>Cant</th><th>Producto</th><th>$PP</th><th>Total</th><th></th></tr></thead>
       <tbody id="cotizTable"></tbody>
     </table>
     <div class="total">Total: S/ <span id="cotizTotal">0.00</span></div>
@@ -231,8 +233,10 @@
     if (el) el.classList.add('active');
     document.getElementById('pageTitle').textContent = { db: 'Bases', ajustes: 'Ajustes', mano: 'Mano de Obra', equipos: 'Equipos', materiales: 'Materiales', cotiz: 'Cotización', listaCotiz: 'Cotizaciones' }[sec] || 'App';
     if (sec !== 'db' && sec !== 'ajustes') renderBase(sec);
-    if (sec === 'cotiz') { renderCotizTable(); updateProductoSelect(); }
+    if (sec === 'cotiz') { renderCotizTable(); updateProductoSelect(); updateStockInfo(); }
     if (sec === 'listaCotiz') renderListaCotizaciones();
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn')[sec === 'db' ? 0 : 1].classList.add('active');
   }
 
   // === LOGO ===
@@ -267,15 +271,16 @@
   // === BASES ===
   function addItem(type) {
     const prefix = type === 'mano' ? 'mano' : type === 'equipos' ? 'equipo' : 'mat';
-    const stock = document.getElementById(prefix + 'Stock').value.trim() || 'N/A';
+    const stockInput = document.getElementById(prefix + 'Stock');
+    const stock = (type === 'mano'|| type === 'equipos') ? (stockInput.value.trim() || 'N/A') : (stockInput.value.trim() || '0');
     const desc = document.getElementById(prefix + (type === 'materiales' ? 'Marca' : 'Desc')).value.trim();
     const desc2 = type === 'materiales' ? document.getElementById('matDesc').value.trim() : '';
     const lista = parseFloat(document.getElementById(prefix + 'Lista').value) || 0;
     const publico = parseFloat(document.getElementById(prefix + 'Publico').value) || 0;
 
-    if (!desc || lista <= 0 || publico <= 0) return alert('Complete todos');
+    if (!desc || lista <= 0 || publico <= 0) return alert('Complete todos los campos');
 
-    const nuevo = { id: Date.now(), stock, precioLista: lista, precioPublico: publico };
+    const nuevo = { id: Date.now(), stock: stock === 'N/A' ? 'N/A' : parseInt(stock), precioLista: lista, precioPublico: publico };
     if (type === 'mano') nuevo.puesto = desc;
     else if (type === 'equipos') nuevo.desc = desc;
     else { nuevo.marca = desc; nuevo.desc = desc2; }
@@ -348,15 +353,51 @@
     ['mano', 'equipos', 'materiales'].forEach(type => {
       db[type].forEach(item => {
         const text = type === 'mano' ? item.puesto : type === 'equipos' ? item.desc : `${item.marca} - ${item.desc}`;
-        select.add(new Option(text, `${type}-${item.id}`));
+        const opt = new Option(text, `${type}-${item.id}`);
+        if (item.stock !== 'N/A' && item.stock <= 0) opt.disabled = true;
+        select.add(opt);
       });
     });
+    updateStockInfo();
+  }
+
+  function updateStockInfo() {
+    const select = document.getElementById('selectProducto');
+    const info = document.getElementById('stockInfo');
+    if (!select.value) {
+      info.textContent = 'Stock: -';
+      return;
+    }
+    const [type, idStr] = select.value.split('-');
+    const id = parseInt(idStr);
+    const item = db[type].find(x => x.id === id);
+    if (!item || item.stock === 'N/A') {
+      info.textContent = 'Stock: ∞';
+    } else {
+      const usado = getStockUsado(type, id);
+      const disponible = item.stock - usado;
+      info.textContent = `Stock: ${disponible}`;
+      info.style.color = disponible <= 0 ? 'red' : '#5f6368';
+    }
+  }
+
+  function getStockUsado(type, id) {
+    let usado = 0;
+    db.cotizaciones.forEach(c => {
+      if (c.estado === 'Pagado') {
+        c.items.forEach(i => {
+          if (i.type === type && i.matId === id) usado += i.cant;
+        });
+      }
+    });
+    return usado;
   }
 
   function addToCotizFromSelect() {
     const select = document.getElementById('selectProducto');
-    const cant = parseFloat(document.getElementById('cantAdd').value) || 0;
-    if (!select.value || cant <= 0) return alert('Seleccione y cantidad');
+    const cantInput = document.getElementById('cantAdd');
+    const cant = parseInt(cantInput.value) || 0;
+    if (!select.value || cant <= 0) return alert('Seleccione producto y cantidad');
     if (!db.cActual) nuevaVenta();
 
     const [type, idStr] = select.value.split('-');
@@ -364,12 +405,28 @@
     const item = db[type].find(x => x.id === id);
     if (!item) return;
 
-    const existe = db.cActual.items.find(x => x.type === type && x.matId === id);
-    if (existe) existe.cant += cant;
-    else db.cActual.items.push({ type, matId: id, cant });
+    if (item.stock !== 'N/A') {
+      const usado = getStockUsado(type, id);
+      const disponible = item.stock - usado;
+      if (cant > disponible) return alert(`Solo hay ${disponible} disponibles`);
+    }
 
-    document.getElementById('cantAdd').value = '';
+    const existe = db.cActual.items.find(x => x.type === type && x.matId === id);
+    if (existe) {
+      const nuevoTotal = existe.cant + cant;
+      if (item.stock !== 'N/A') {
+        const usado = getStockUsado(type, id);
+        const disponible = item.stock - usado;
+        if (nuevoTotal > disponible) return alert(`Máximo ${disponible} disponibles`);
+      }
+      existe.cant = nuevoTotal;
+    } else {
+      db.cActual.items.push({ type, matId: id, cant });
+    }
+
+    cantInput.value = '';
     select.value = '';
+    updateStockInfo();
     renderCotizTable();
   }
 
@@ -402,12 +459,33 @@
     document.getElementById('cotizTotal').textContent = total.toFixed(2);
   }
 
-  function updateItem(i, cant) { db.cActual.items[i].cant = parseFloat(cant) || 0; renderCotizTable(); }
-  function removeItem(i) { db.cActual.items.splice(i, 1); renderCotizTable(); }
+  function updateItem(i, cantStr) {
+    const cant = parseInt(cantStr) || 0;
+    if (cant <= 0) { removeItem(i); return; }
+    const item = db.cActual.items[i];
+    const base = db[item.type].find(x => x.id === item.matId);
+    if (base && base.stock !== 'N/A') {
+      const usado = getStockUsado(item.type, item.matId);
+      const disponible = base.stock - usado;
+      if (cant > disponible) {
+        alert(`Máximo ${disponible} disponibles`);
+        renderCotizTable();
+        return;
+      }
+    }
+    item.cant = cant;
+    renderCotizTable();
+  }
+
+  function removeItem(i) { 
+    db.cActual.items.splice(i, 1); 
+    renderCotizTable(); 
+    updateStockInfo();
+  }
 
   function guardarCotizacion() {
     const c = db.cActual;
-    if (!c) return;
+    if (!c || !c.items.length) return alert('Agrega productos');
     c.cliente = document.getElementById('clienteName').value;
     c.tel = document.getElementById('clienteTel').value;
     c.dir = document.getElementById('clienteDir').value;
@@ -438,9 +516,23 @@
     const cambio = recibido - total;
     db.cActual.estado = recibido >= total ? 'Pagado' : 'Pendiente';
     guardarCotizacion();
+    if (recibido >= total) restarStock();
     alert(cambio >= 0 ? `¡PAGO COMPLETADO!\nCambio: S/ ${cambio.toFixed(2)}` : `Faltan: S/ ${(-cambio).toFixed(2)}`);
     imprimirPDF();
     document.querySelector('div[style*="z-index:1000"]')?.remove();
+  }
+
+  function restarStock() {
+    db.cActual.items.forEach(i => {
+      const base = db[i.type].find(x => x.id === i.matId);
+      if (base && base.stock !== 'N/A') {
+        base.stock -= i.cant;
+        if (base.stock < 0) base.stock = 0;
+      }
+    });
+    saveDB();
+    renderAllBases();
+    updateProductoSelect();
   }
 
   async function imprimirPDF() {
@@ -459,7 +551,7 @@
       const b = db[i.type].find(x => x.id === i.matId);
       return [i.cant, i.type === 'mano' ? b.puesto : i.type === 'equipos' ? b.desc : `${b.marca} - ${b.desc}`, `S/ ${b.precioPublico.toFixed(2)}`, `S/ ${(i.cant*b.precioPublico).toFixed(2)}`];
     });
-    doc.autoTable({ head: [['Cant', 'Producto', 'P.Púb', 'Total']], body: data, startY: 65 });
+    doc.autoTable({ head: [['Cant', 'Producto', '$PP', 'Total']], body: data, startY: 65 });
     doc.text(`Total: S/ ${total.toFixed(2)}`, 160, doc.lastAutoTable.finalY + 15);
     doc.text(`Obs: ${c.obs}`, 15, doc.lastAutoTable.finalY + 25);
 
