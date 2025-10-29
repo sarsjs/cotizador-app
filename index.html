@@ -188,4 +188,324 @@
 <svg style="display:none;">
   <symbol id="mano" viewBox="0 0 24 24"><path d="M12 6v4h-1V6h1zm-1 6v6h1v-6h-1zm2-6h1v4h-1V6zm-2 6h1v6h-1v-6zm2 0h1v6h-1v-6z"/></symbol>
   <symbol id="equipo" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></symbol>
-  <symbol id="material" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4
+  <symbol id="material" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></symbol>
+  <symbol id="settings" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.33-.02-.64-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22l-1.92 3.32c-.15.25-.08.56.12.61l2.03 1.58c-.04.3-.06.61-.06.94 0 .33.02.64.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.15.25.37.31.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l-.36-2.54c-.59-.24-1.13-.57-1.62-.94l2.39.96c.22.09.44.03.59-.22l1.92-3.32c.15-.25.08-.56-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></symbol>
+</svg>
+
+<script>
+  let db = { config: { empresa: 'Mi Empresa', logo: '' }, mano: [], equipos: [], materiales: [], cotizaciones: [], cActual: null };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDB();
+    nuevaVenta();
+    showSection('db');
+    updateProductoSelect();
+    loadLogo();
+  });
+
+  function loadDB() {
+    try {
+      const saved = localStorage.getItem('cotizador_db');
+      if (saved) db = JSON.parse(saved);
+      else {
+        db.materiales = [
+          { id: 1, stock: "20", marca: "Moctezuma", desc: "Cemento", precioLista: 120, precioPublico: 145 },
+          { id: 2, stock: "30", marca: "Sika", desc: "Aditivo", precioLista: 45, precioPublico: 58 }
+        ];
+      }
+    } catch (e) { console.error('Error loading DB:', e); }
+    renderAllBases();
+  }
+
+  function saveDB() { 
+    try { 
+      localStorage.setItem('cotizador_db', JSON.stringify(db));
+    } catch (e) { 
+      alert("Error al guardar. Libera espacio."); 
+    }
+  }
+
+  function showSection(sec) {
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    const el = document.getElementById(sec + 'Content');
+    if (el) el.classList.add('active');
+    document.getElementById('pageTitle').textContent = { db: 'Bases', ajustes: 'Ajustes', mano: 'Mano de Obra', equipos: 'Equipos', materiales: 'Materiales', cotiz: 'Cotización', listaCotiz: 'Cotizaciones' }[sec] || 'App';
+    if (sec !== 'db' && sec !== 'ajustes') renderBase(sec);
+    if (sec === 'cotiz') { renderCotizTable(); updateProductoSelect(); }
+    if (sec === 'listaCotiz') renderListaCotizaciones();
+  }
+
+  // === LOGO ===
+  document.getElementById('logoInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      db.config.logo = ev.target.result;
+      document.getElementById('logoPreview').src = db.config.logo;
+      document.getElementById('logoPreview').style.display = 'block';
+      loadLogo();
+      saveDB();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function loadLogo() {
+    if (db.config.logo) {
+      document.getElementById('headerLogo').src = db.config.logo;
+      document.getElementById('headerLogo').style.display = 'block';
+    }
+  }
+
+  function saveSettings() {
+    db.config.empresa = document.getElementById('empresaName').value.trim() || 'Mi Empresa';
+    saveDB();
+    loadLogo();
+    alert('Guardado');
+  }
+
+  // === BASES ===
+  function addItem(type) {
+    const prefix = type === 'mano' ? 'mano' : type === 'equipos' ? 'equipo' : 'mat';
+    const stock = document.getElementById(prefix + 'Stock').value.trim() || 'N/A';
+    const desc = document.getElementById(prefix + (type === 'materiales' ? 'Marca' : 'Desc')).value.trim();
+    const desc2 = type === 'materiales' ? document.getElementById('matDesc').value.trim() : '';
+    const lista = parseFloat(document.getElementById(prefix + 'Lista').value) || 0;
+    const publico = parseFloat(document.getElementById(prefix + 'Publico').value) || 0;
+
+    if (!desc || lista <= 0 || publico <= 0) return alert('Complete todos');
+
+    const nuevo = { id: Date.now(), stock, precioLista: lista, precioPublico: publico };
+    if (type === 'mano') nuevo.puesto = desc;
+    else if (type === 'equipos') nuevo.desc = desc;
+    else { nuevo.marca = desc; nuevo.desc = desc2; }
+
+    db[type].push(nuevo);
+    clearAddRow(type);
+    renderBase(type);
+    updateProductoSelect();
+    saveDB();
+  }
+
+  function deleteItem(type, id) {
+    db[type] = db[type].filter(x => x.id !== id);
+    renderBase(type);
+    updateProductoSelect();
+    saveDB();
+  }
+
+  function renderBase(type) {
+    const list = document.getElementById(type + 'List');
+    if (!list) return;
+    list.innerHTML = '';
+    db[type].forEach(x => {
+      const tr = document.createElement('tr');
+      let cols = type === 'mano' 
+        ? [x.stock, x.puesto, x.precioLista.toFixed(2), x.precioPublico.toFixed(2)]
+        : type === 'equipos'
+        ? [x.stock, x.desc, x.precioLista.toFixed(2), x.precioPublico.toFixed(2)]
+        : [x.stock, x.marca, x.desc, x.precioLista.toFixed(2), x.precioPublico.toFixed(2)];
+      tr.innerHTML = cols.map(c => `<td>${c}</td>`).join('') + `<td><button class="btn" style="background:var(--r);color:white;padding:4px 6px;" onclick="deleteItem('${type}',${x.id})">X</button></td>`;
+      list.appendChild(tr);
+    });
+  }
+
+  function renderAllBases() { ['mano', 'equipos', 'materiales'].forEach(renderBase); }
+
+  function clearAddRow(type) {
+    const prefix = type === 'mano' ? 'mano' : type === 'equipos' ? 'equipo' : 'mat';
+    ['Stock', (type === 'materiales' ? 'Marca' : 'Desc'), 'Lista', 'Publico'].forEach(s => {
+      const el = document.getElementById(prefix + s);
+      if (el) el.value = '';
+    });
+    if (type === 'materiales') document.getElementById('matDesc').value = '';
+  }
+
+  function saveBase(type) { saveDB(); alert('Guardado'); }
+
+  // === COTIZACIÓN ===
+  function nuevaVenta() {
+    db.cActual = { id: Date.now(), num: pad(db.cotizaciones.length + 1), cliente: '', tel: '', dir: '', obs: '', items: [], estado: 'Borrador' };
+    cargarCotizActual();
+    showSection('cotiz');
+  }
+
+  function cargarCotizActual() {
+    const c = db.cActual;
+    if (!c) return;
+    document.getElementById('cotizNum').textContent = c.num;
+    document.getElementById('clienteName').value = c.cliente || '';
+    document.getElementById('clienteTel').value = c.tel || '';
+    document.getElementById('clienteDir').value = c.dir || '';
+    document.getElementById('observaciones').value = c.obs || '';
+    renderCotizTable();
+  }
+
+  function updateProductoSelect() {
+    const select = document.getElementById('selectProducto');
+    if (!select) return;
+    select.innerHTML = '<option>Seleccione...</option>';
+    ['mano', 'equipos', 'materiales'].forEach(type => {
+      db[type].forEach(item => {
+        const text = type === 'mano' ? item.puesto : type === 'equipos' ? item.desc : `${item.marca} - ${item.desc}`;
+        select.add(new Option(text, `${type}-${item.id}`));
+      });
+    });
+  }
+
+  function addToCotizFromSelect() {
+    const select = document.getElementById('selectProducto');
+    const cant = parseFloat(document.getElementById('cantAdd').value) || 0;
+    if (!select.value || cant <= 0) return alert('Seleccione y cantidad');
+    if (!db.cActual) nuevaVenta();
+
+    const [type, idStr] = select.value.split('-');
+    const id = parseInt(idStr);
+    const item = db[type].find(x => x.id === id);
+    if (!item) return;
+
+    const existe = db.cActual.items.find(x => x.type === type && x.matId === id);
+    if (existe) existe.cant += cant;
+    else db.cActual.items.push({ type, matId: id, cant });
+
+    document.getElementById('cantAdd').value = '';
+    select.value = '';
+    renderCotizTable();
+  }
+
+  function renderCotizTable() {
+    const tbody = document.getElementById('cotizTable');
+    if (!tbody || !db.cActual?.items?.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#999;">Seleccione arriba</td></tr>';
+      document.getElementById('cotizTotal').textContent = '0.00';
+      return;
+    }
+
+    let total = 0;
+    tbody.innerHTML = '';
+    db.cActual.items.forEach((item, i) => {
+      const base = db[item.type].find(x => x.id === item.matId);
+      if (!base) return;
+      const desc = item.type === 'mano' ? base.puesto : item.type === 'equipos' ? base.desc : `${base.marca}<br><small>${base.desc}</small>`;
+      const pt = item.cant * base.precioPublico;
+      total += pt;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="number" value="${item.cant}" onchange="updateItem(${i},this.value)" style="width:50px;" /></td>
+        <td>${desc}</td>
+        <td>S/ ${base.precioPublico.toFixed(2)}</td>
+        <td>S/ ${pt.toFixed(2)}</td>
+        <td><button class="btn" style="background:var(--r);color:white;padding:4px 6px;" onclick="removeItem(${i})">X</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('cotizTotal').textContent = total.toFixed(2);
+  }
+
+  function updateItem(i, cant) { db.cActual.items[i].cant = parseFloat(cant) || 0; renderCotizTable(); }
+  function removeItem(i) { db.cActual.items.splice(i, 1); renderCotizTable(); }
+
+  function guardarCotizacion() {
+    const c = db.cActual;
+    if (!c) return;
+    c.cliente = document.getElementById('clienteName').value;
+    c.tel = document.getElementById('clienteTel').value;
+    c.dir = document.getElementById('clienteDir').value;
+    c.obs = document.getElementById('observaciones').value;
+    const index = db.cotizaciones.findIndex(x => x.id === c.id);
+    if (index >= 0) db.cotizaciones[index] = c; else db.cotizaciones.push(c);
+    saveDB();
+    alert('Guardado con éxito');
+  }
+
+  function cobrar() {
+    const total = parseFloat(document.getElementById('cotizTotal').textContent) || 0;
+    const popup = document.createElement('div');
+    popup.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;';
+    popup.innerHTML = `<div style="background:white;padding:20px;border-radius:16px;width:90%;max-width:400px;">
+      <h3>Total: S/ ${total.toFixed(2)}</h3>
+      <input type="number" step="0.01" id="recibido" placeholder="Recibido" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:8px;" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="background:#eee;" onclick="this.closest('div').parentElement.remove()">Cancelar</button>
+        <button class="btn btn-g" onclick="procesarPago(${total})">Aceptar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(popup);
+  }
+
+  function procesarPago(total) {
+    const recibido = parseFloat(document.getElementById('recibido').value) || 0;
+    const cambio = recibido - total;
+    db.cActual.estado = recibido >= total ? 'Pagado' : 'Pendiente';
+    guardarCotizacion();
+    alert(cambio >= 0 ? `¡PAGO COMPLETADO!\nCambio: S/ ${cambio.toFixed(2)}` : `Faltan: S/ ${(-cambio).toFixed(2)}`);
+    imprimirPDF();
+    document.querySelector('div[style*="z-index:1000"]')?.remove();
+  }
+
+  async function imprimirPDF() {
+    const c = db.cActual;
+    const total = parseFloat(document.getElementById('cotizTotal').textContent) || 0;
+    const empresa = db.config.empresa || 'Mi Empresa';
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    if (db.config.logo) doc.addImage(db.config.logo, 'PNG', 15, 10, 30, 30);
+    doc.setFontSize(16); doc.text(empresa, 50, 25);
+    doc.setFontSize(10); doc.text(`Cot: ${c.num} | ${new Date().toLocaleDateString()} | ${c.estado}`, 15, 45);
+    doc.setFontSize(11); doc.text(`Cliente: ${c.cliente} | ${c.tel} | ${c.dir}`, 15, 55);
+
+    const data = c.items.map(i => {
+      const b = db[i.type].find(x => x.id === i.matId);
+      return [i.cant, i.type === 'mano' ? b.puesto : i.type === 'equipos' ? b.desc : `${b.marca} - ${b.desc}`, `S/ ${b.precioPublico.toFixed(2)}`, `S/ ${(i.cant*b.precioPublico).toFixed(2)}`];
+    });
+    doc.autoTable({ head: [['Cant', 'Producto', 'P.Púb', 'Total']], body: data, startY: 65 });
+    doc.text(`Total: S/ ${total.toFixed(2)}`, 160, doc.lastAutoTable.finalY + 15);
+    doc.text(`Obs: ${c.obs}`, 15, doc.lastAutoTable.finalY + 25);
+
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Cotizacion_${c.num}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function enviarCotizacion() {
+    await imprimirPDF();
+    alert("PDF generado en Descargas. Envíe por WhatsApp");
+  }
+
+  function abrirListaCotizaciones() {
+    showSection('listaCotiz');
+  }
+
+  function renderListaCotizaciones() {
+    const container = document.getElementById('listaCotiz');
+    container.innerHTML = '';
+    if (!db.cotizaciones.length) {
+      container.innerHTML = '<p style="color:#999;">No hay cotizaciones guardadas</p>';
+      return;
+    }
+    db.cotizaciones.forEach(c => {
+      const total = c.items.reduce((sum, i) => {
+        const b = db[i.type].find(x => x.id === i.matId);
+        return sum + (i.cant * (b?.precioPublico || 0));
+      }, 0);
+      const div = document.createElement('div');
+      div.className = 'cotiz-item';
+      div.innerHTML = `<strong>Cot: ${c.num}</strong> | ${c.cliente || 'Sin cliente'} | S/ ${total.toFixed(2)} | ${c.estado}<br><small>${new Date(c.id).toLocaleDateString()}</small>`;
+      div.onclick = () => {
+        db.cActual = JSON.parse(JSON.stringify(c));
+        cargarCotizActual();
+        showSection('cotiz');
+      };
+      container.appendChild(div);
+    });
+  }
+
+  function pad(n) { return String(n).padStart(6, '0'); }
+</script>
+</body>
+  </html>
